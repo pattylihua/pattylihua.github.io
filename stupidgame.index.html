@@ -1,0 +1,173 @@
+<html>
+<head>
+<body 
+
+background="http://static9.depositphotos.com/1280399/1106/i/450/depositphotos_11065888
+
+-White-canvas-texture-as-old-grunge-background-with-delicate-blue-sky-ans-white-
+
+clouds-view.jpg">
+<div style="font-family:Broadway;font-size:40%;color:black">Click "start" to 
+
+begin.</div>
+<div id="score"  style="font-family:chiller;font-size:150%;color:red">0</div> 
+<div id="start" style="font-family:Algerian;font-size:60%;color:purple">Start</div>
+<div id="stop" style="font-family:algerian;font-size:60%;color:purple">Stop</div>
+<div style="font-family:Algerian;font-size:60%;color:purple">Time left：</div>
+<div id="clock" id="score"  style="font-family:chiller;font-
+
+size:100%;color:red">00:00:15:00</div>
+</body>
+<script type="text/javascript" src="http://ajax.googleapis.com/
+ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript"> 
+$(document).ready(function()
+{
+// Getting screen resolutions and positioning the start button
+var width = screen.width - 100;
+var height = screen.height - 200;
+var code = 0;
+$('#start').css(
+{ 
+"top" : (height/2)+'px', 
+"left" : (width/2)+'px' 
+});
+
+$('#start').click( function()
+{
+$(this).fadeOut('slow');
+$('#score').show();
+$('#stop').show();
+genLetter();
+run();
+});
+$('#stop').css(
+{ 
+"top" : (height/2)+'px', 
+"left" : (width/2)+'px' 
+});
+$('#stop').click( function()
+{
+$(this).fadeOut('slow');
+$('#start').show();
+stopCount();
+stop();
+});
+// Dealing KeyEvents and fading out matched bubble
+$(document).keydown( function(event) 
+{
+var keycode = event.keyCode;
+$('.bubb'+keycode).animate(
+{ 
+"top" : height+"px", "opacity" : 0 
+}, 'slow'); 
+
+$('.bubb'+keycode).fadeOut('slow').hide( 'slow', function()
+{
+code += 20;
+$('#score').html(code);
+$(this).remove();
+}
+);
+});
+
+// Generating a random alphabet between A-Z
+var t
+function genLetter()
+{
+var color = randomColor();
+var k = Math.floor(Math.random() * ( 90 - 65 + 1 )) + 65;
+var ch = String.fromCharCode(k);
+var top = Math.floor(Math.random() * height );
+var left = Math.floor(Math.random() * width );
+$('body').append('<span class="bubb bubb'+ k +'" style="left: '+ left +'; top: '+ top 
+
++'; background-color:'+ color +'">'+ ch +'</span>');
+t=setTimeout(genLetter, 1000);
+}
+function stopCount() 
+{ 
+clearTimeout(t) 
+} 
+
+// Generating a random color
+function randomColor()
+{
+var color = '';
+var values = ['a', 'b', 'c', 'd', 'e', 'f', '1', '2', '3', '4', '5', '6', '7', '8', 
+
+'9', '0'];
+for (c = 0; c < 6; c++) 
+{
+no = Math.floor(Math.random() * 15);
+color += values[no];
+}
+return color;
+}
+});
+var normalelapse = 100; 
+var nextelapse = normalelapse;
+var counter;  
+var startTime;
+var start1 = clock.innerText;  
+var finish = "00:00:00:00"; 
+function run() { 
+    counter = 0; 
+ 
+    startTime = new Date().valueOf();
+    //alert(startTime);
+    
+timer = setInterval("onTimer()",nextelapse)    
+} 
+function stop() { 
+    window.clearTimeout(timer); 
+} 
+function onTimer() 
+{ 
+    if (start1 == finish) 
+    { 
+  window.clearInterval(timer);  
+        return;
+    } 
+    var hms = new String(start1).split(":"); 
+    var ms = new Number(hms[3]); 
+    var s = new Number(hms[2]); 
+    var m = new Number(hms[1]); 
+    var h = new Number(hms[0]); 
+    ms -= 10; 
+    if (ms < 0) 
+    { 
+        ms = 90; 
+        s -= 1; 
+        if (s < 0) 
+        { 
+            s = 59; 
+            m -= 1; 
+        } 
+        if (m < 0) 
+        { 
+            m = 59; 
+            h -= 1; 
+        } 
+    } 
+    var ms = ms < 10 ? ("0" + ms) : ms; 
+    var ss = s < 10 ? ("0" + s) : s; 
+    var sm = m < 10 ? ("0" + m) : m; 
+    var sh = h < 10 ? ("0" + h) : h; 
+    start1 = sh + ":" + sm + ":" + ss + ":" + ms; 
+    clock.innerText = start1;  
+    window.clearInterval(timer); 
+    counter++;  
+    var counterSecs = counter * 100; 
+    var elapseSecs = new Date().valueOf() - startTime; 
+    var diffSecs = counterSecs - elapseSecs; 
+    nextelapse = normalelapse + diffSecs; 
+    //diff.value = counterSecs + "-" + elapseSecs + "=" + diffSecs; 
+   // next.value = "nextelapse = " + nextelapse; 
+    if (nextelapse < 0) nextelapse = 0;  
+    timer = window.setInterval("onTimer()", nextelapse);
+}
+
+</script>
+</body>
+</html>
