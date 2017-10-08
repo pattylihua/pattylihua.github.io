@@ -1,0 +1,176 @@
+module mojo_top (
+    input clk,              // 50MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    output spi_miso,        // AVR SPI MISO
+    output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
+    output avr_rx,          // AVR RX (FPGA TX)    
+    output out[3],
+    input sum,
+    input carry,
+    output io_led [3][8],   // LEDs on IO Shield
+    input io_button [5],    // 5 buttons on IO Shield
+    input io_dip [3][8]     // DIP switches on IO Shield
+    
+    
+  ) {
+  
+  sig rst;                  // reset signal
+  
+  .clk(clk) {
+    reset_conditioner reset_cond;
+    .rst(rst) {
+    fsm testState = {ID, A, B, C, AB, AC, BC, ABC, O, FAIL};
+    }
+    dff counter[27];
+  }
+  
+  always {
+    reset_cond.in = ~rst_n; 
+    rst = reset_cond.out;   
+    
+    led = 8h00;             // turn LEDs off
+    spi_miso = bz;          // not using SPI
+    spi_channel = bzzzz;    // not using flags
+    avr_rx = bz;            // not using serial port
+    
+    io_led = 3x{{8h00}};    // turn LEDs off
+    out[2:0] = io_dip[2][2:0];
+    io_led[1][0] = sum;
+    io_led[1][1] = carry;
+    
+    if ( io_dip[2][0] ^ io_dip[2][1] ^ io_dip[2][2] == sum) 
+      { io_led[1][7] = 1; //indicate that sum is correct
+      }
+    if ((io_dip[2][0] & io_dip[2][1]) | ((io_dip[2][0] ^ io_dip[2][1]) &io_dip[2][2]) == carry) 
+    {
+      io_led[1][6] = 1; //sum is correct
+    }
+    
+    
+    if (counter.q[24:0] == 0) {
+    //FSM
+
+      case(testState.q) { 
+    
+      testState.O:
+          if (carry == 0 & sum == 0) {
+            testState.d = testState.ID;
+          } else {
+              testState.d = testState.FAIL;
+          }
+        
+        testState.ABC:
+          if (carry == 1 & sum == 1) {
+            testState.d = testState.O;
+          } else {
+              testState.d = testState.FAIL;
+          }
+        
+         testState.AC:
+          if (carry == 1 & sum == 0) {
+            testState.d = testState.ABC;
+          } else {
+              testState.d = testState.FAIL;
+          }
+        
+        testState.BC:
+          if (carry == 1 & sum == 0) {
+            testState.d = testState.AC;
+          } else {
+              testState.d = testState.FAIL;
+          }          
+        
+          
+        testState.AB:
+          if (carry == 1 & sum == 0) {
+            testState.d = testState.BC;
+          } else {
+              testState.d = testState.FAIL;
+          }
+          
+          
+        
+          testState.C:
+          if (carry == 0 & sum == 1) {
+            testState.d = testState.AB;
+          } else {
+              testState.d = testState.FAIL;
+          }
+        
+          
+        testState.B:
+          if (carry == 0 & sum == 1) {
+            testState.d = testState.C;
+          } else {
+              testState.d = testState.FAIL;
+          }
+        
+        testState.A:
+          if (carry == 0 & sum == 1) {
+            testState.d = testState.B;
+          } else {
+              testState.d = testState.FAIL;
+          }
+        
+        testState.ID:
+          if (io_button[1] == 1){
+            testState.d = testState.A;
+          }
+          
+        testState.FAIL:
+          if (counter.q == 0){
+            testState.d = testState.ID;
+          }
+    }
+    }
+    counter.d = counter.q+1;
+    
+    case(testState.q) { //output
+    
+      testState.O:
+          out[2:0] = 000;
+          io_led[0][0] = 1;
+          
+        
+        testState.ABC:
+          out[2:0] = 111;
+          io_led[0][1]= 1; 
+        
+         testState.AC:
+          out[2:0] = 101;
+          io_led[0][2] = 1;
+        
+        testState.BC:
+          out[2:0] = 110;
+          io_led[0][3] = 1;
+          
+        testState.AB:
+          out[2:0] = 011;
+          io_led[0][4] = 1;
+          
+        
+          testState.C:
+          out[2:0] = 100;
+          io_led[0][5] = 1;
+        
+          
+        testState.B:
+          out[2:0] = 010;
+          io_led[0][6] = 1;
+        
+        testState.A:
+          out[2:0] = 001;
+          io_led[0][7] = 1;
+        
+        testState.ID:
+            io_led[1][3] = 1;  
+        
+        testState.FAIL:
+          if (counter.q[22] == 1) {
+            io_led[1][3] = 1;  
+          } 
+    }
+    
+  }
+}
